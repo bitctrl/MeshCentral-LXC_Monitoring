@@ -1,0 +1,18 @@
+{
+  "name": "LXC Container and Service Monitoring",
+  "shortName": "lxc_monitoring",
+  "version": "0.0.1",
+  "author": "Daniel Hammerschmidt",
+  "description": "Export metrics for LXC containers and running services within them",
+  "hasAdminPanel": false,
+  "homepage": "https://github.com/bitctrl/MeshCentral-LXC_Monitoring",
+  "changelogUrl": "https://raw.githubusercontent.com/bitctrl/MeshCentral-LXC_Monitoring/main/changelog.md",
+  "configUrl": "https://raw.githubusercontent.com/bitctrl/MeshCentral-LXC_Monitoring/main/config.json",
+  "downloadUrl": "https://github.com/bitctrl/MeshCentral-LXC_Monitoring/archive/main.zip",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitctrl/MeshCentral-LXC_Monitoring.git"
+  },
+  "versionHistoryUrl": "https://github.com/bitctrl/MeshCentral-LXC_Monitoring/tags",
+  "meshCentralCompat": ">=1.1.36"
+}
