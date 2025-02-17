@@ -1,14 +1,17 @@
 # MeshCentral-LXC_Monitoring
 
-Export metrics for LXC containers and running services within them with the MeshCentral monitoring module.
+Export metrics for LXC containers and running services within them with the
+[MeshCentral](https://github.com/Ylianst/MeshCentral) monitoring module.
 
 ## Installation
 
- Pre-requisite: First, make sure you have plugins enabled for your MeshCentral installation:
+Pre-requisite: First, make sure you have plugins and the monitoring module
+enabled for your MeshCentral installation:
 ```json
     "plugins": {
          "enabled": true
     },
+    "prometheus": true,
 ```
 Restart your MeshCentral server after making this change.
 

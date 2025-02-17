@@ -7,7 +7,7 @@ let meshserver;
 let monitoring;
 let prometheus;
 
-let cgroupRootPath;
+let cgroupRootPath, cgroupRootDir;
 let metricNamePrefix;
 let collectorName;
 const metrics ={};
@@ -54,7 +54,6 @@ async function collectCgroupMetrics(cgroupPath, containerName, serviceName) {
 
 async function collectLxcContainerMetrics() {
   const startTs = Date.now();
-  const cgroupRootDir = await opendir(cgroupRootPath);
   for await (const containerDirent of cgroupRootDir) {
     if (!containerDirent.isDirectory() || !containerDirent.name.startsWith(LXC_PAYLOAD_PREFIX)) {
       continue;
@@ -128,6 +127,8 @@ module.exports.lxc_monitoring = function (parent) {
     const buffer = await readFile(__filename.replace(/\.js$/, '.conf.json'));
     const config = JSON.parse(buffer.toString());
     ({ collectorName, metricNamePrefix, cgroupRootPath } = config );
+    // TODO: check if its a cgroup2 fs
+    cgroupRootDir = await opendir(cgroupRootPath);
     monitoring = meshserver.monitoring;
     prometheus = monitoring.prometheus;
     setupLxcContainerMetrics();
