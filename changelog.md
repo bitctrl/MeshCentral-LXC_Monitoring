@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.6] - 2025-02-17
+### Fixed
+- Do not close cgroup directory (as stated the NodeJS documentation).
+
 ## [0.0.5] - 2025-02-17
 ### Fixed
 - Re-open cgroup directory on each scrape.
