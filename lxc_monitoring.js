@@ -75,7 +75,6 @@ async function collectLxcContainerMetrics() {
       collectCgroupMetrics(servicePath, containerName, serviceName);
     }
   }
-  cgroupRootDir.close();
   const endTs = Date.now();
   const duration = (endTs - startTs) / 1000;
   metrics.nodeCollectorDuration.labels(collectorName).set(duration);
