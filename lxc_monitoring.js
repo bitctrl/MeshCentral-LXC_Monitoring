@@ -1,7 +1,7 @@
 'use strict';
 
-const fs = require('node:fs/promises');
-const path = require('node:path');
+const { opendir, readFile } = require('node:fs/promises');
+const PATH_SEP = require('node:path').sep;
 
 let meshserver;
 let monitoring;
@@ -28,36 +28,47 @@ const psiValueNames = [ 'avg10', 'avg60', 'avg300', 'total' ];
 const metricLabelNames = [ 'container_name', 'service_name' ];
 
 async function collectCgroupMetrics(cgroupPath, containerName, serviceName) {
-  metrics.memoryCurrent.labels(containerName, serviceName).set( +( await fs.readFile(path.join(cgroupPath, MEMORY_CURRENT)) ).toString() );
-  metrics.memorySwapCurrent.labels(containerName, serviceName).set( +( await fs.readFile(path.join(cgroupPath, MEMORY_SWAP_CURRENT)) ).toString() );
+  const labels = { container_name: containerName, service_name: serviceName };
+  const readFileOptions = { encoding: 'ascii' };
+  let value;
+  value = +( await readFile(cgroupPath + PATH_SEP + MEMORY_CURRENT, readFileOptions));
+  metrics.memoryCurrent.set(labels, value);
+  value = +( await readFile(cgroupPath + PATH_SEP + MEMORY_SWAP_CURRENT, readFileOptions));
+  metrics.memorySwapCurrent.set(labels, value);
   for (let controllerName of psiControllerNames) {
-    const data = await fs.readFile(path.join(cgroupPath, controllerName + PSI_SUFFIX));
-    data.toLocaleString().split('\n').filter((line) => (!!line)).map((line)=>(line.split(' '))).map(([scope, avg10, avg60, avg300, total])=>{
-      for (let x of [avg10, avg60, avg300, total]) {
-        let [ valueName, value ] = x.split('=');
+    const controllerMetrics = metrics[controllerName];
+    const lines = (await readFile(cgroupPath + PATH_SEP + controllerName + PSI_SUFFIX, readFileOptions)).split('\n');
+    lines.pop(); // remove the trailing empty line
+    for (let line of lines) {
+      const parts = line.split(' ');
+      const scope = parts.shift();
+      const scope_metrics = controllerMetrics[scope];
+      for (let part of parts) {
+        let [ valueName, value ] = part.split('=');
         value = +value;
-        metrics[controllerName][scope][valueName].labels(containerName, serviceName).set(value);
+        scope_metrics[valueName].set(labels, value);
       }
-    });
+    };
   }
 }
 
 async function collectLxcContainerMetrics() {
   const startTs = Date.now();
-  const cgroupRootDir = await fs.opendir(cgroupRootPath);
+  const cgroupRootDir = await opendir(cgroupRootPath);
   for await (const containerDirent of cgroupRootDir) {
     if (!containerDirent.isDirectory() || !containerDirent.name.startsWith(LXC_PAYLOAD_PREFIX)) {
       continue;
     }
-    const containerPath = path.join(cgroupRootPath, containerDirent.name);
+    const containerPath = cgroupRootPath + PATH_SEP + containerDirent.name;
     const containerName = containerDirent.name.slice(LXC_PAYLOAD_PREFIX_LENGTH);
     collectCgroupMetrics(containerPath, containerName, '');
-    const sliceDir = await fs.opendir(path.join(containerPath, SYSTEM_SLICE));
+    const slicePath = containerPath + PATH_SEP + SYSTEM_SLICE;
+    const sliceDir = await opendir(slicePath);
     for await (const sliceDirent of sliceDir) {
       if (!sliceDirent.isDirectory() || !sliceDirent.name.endsWith(SERVICE_SUFFIX)) {
         continue;
       }
-      const servicePath = path.join(containerPath, SYSTEM_SLICE, sliceDirent.name);
+      const servicePath = slicePath + PATH_SEP + sliceDirent.name;
       const serviceName = sliceDirent.name.slice(0, sliceDirent.name.length - SERVICE_SUFFIX_LENGTH);
       collectCgroupMetrics(servicePath, containerName, serviceName);
     }
@@ -114,7 +125,7 @@ module.exports.lxc_monitoring = function (parent) {
   meshserver = parent.parent;
   var obj = {};
   obj.server_startup = async function() {
-    const buffer = await fs.readFile(__filename.replace(/\.js$/, '.conf.json'));
+    const buffer = await readFile(__filename.replace(/\.js$/, '.conf.json'));
     const config = JSON.parse(buffer.toString());
     ({ collectorName, metricNamePrefix, cgroupRootPath } = config );
     monitoring = meshserver.monitoring;
