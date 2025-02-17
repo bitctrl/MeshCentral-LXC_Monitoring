@@ -124,11 +124,29 @@ module.exports.lxc_monitoring = function (parent) {
   meshserver = parent.parent;
   var obj = {};
   obj.server_startup = async function() {
-    const buffer = await readFile(__filename.replace(/\.js$/, '.conf.json'));
-    const config = JSON.parse(buffer.toString());
+    let config;
+    config = await readFile(__filename.replace(/\.js$/, '.conf.json'), 'utf-8').catch((error) => {
+      console.log('Error while reading configuration file.', error);
+    });
+    try {
+      config = JSON.parse(config);
+    } catch (error) {
+      console.log('Error while parsing configuration.', error);
+      return;
+    }
     ({ collectorName, metricNamePrefix, cgroupRootPath } = config );
-    // TODO: check if its a cgroup2 fs
-    cgroupRootDir = await opendir(cgroupRootPath);
+    const mounts = await readFile('/proc/mounts', 'ascii');
+    const fstypes = Object.fromEntries(mounts.split('\n').map((entry) => (entry.split(' '))).map(([_, mountpoint, fstype])=>([mountpoint, fstype])));
+    if (fstypes[cgroupRootPath] !== 'cgroup2') {
+      console.log(new Error('The configured cgroup-root is not a cgroup2 filesystem.'));
+      return;
+    }
+    cgroupRootDir = await opendir(cgroupRootPath).catch((error) => {
+      console.log('Cannot open cgroup root directory.', error);
+    });
+    if (cgroupRootDir.path !== cgroupRootPath) {
+      return;
+    }
     monitoring = meshserver.monitoring;
     prometheus = monitoring.prometheus;
     setupLxcContainerMetrics();

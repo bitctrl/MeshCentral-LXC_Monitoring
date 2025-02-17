@@ -18,6 +18,9 @@ Restart your MeshCentral server after making this change.
  To install, simply add the plugin configuration URL when prompted:
  `https://raw.githubusercontent.com/bitctrl/MeshCentral-LXC_Monitoring/refs/heads/main/config.json`
 
+ After installation copy the configuration template and adapt it to your needs.
+ Restart your MeshCentral server again after making this change.
+
 ## cgroup filesystem
 
 Set the `cgroupRootPath` in `lxc_monitoring.conf.json` to the directory where the cgroup2-fs is mounted.
