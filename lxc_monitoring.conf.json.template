@@ -1,5 +1,5 @@
 {
   "collectorName": "bitctrl_lxc",
   "metricNamePrefix": "bitctrl_lxc",
-  "cgroupRootPath": "/media/lxc-host-cgroup"
+  "cgroupRootPath": "/sys/fs/cgroup"
 }
