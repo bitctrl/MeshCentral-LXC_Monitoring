@@ -7,7 +7,7 @@ let meshserver;
 let monitoring;
 let prometheus;
 
-let cgroupRootPath, cgroupRootDir;
+let cgroupRootPath;
 let metricNamePrefix;
 let collectorName;
 const metrics ={};
@@ -54,6 +54,9 @@ async function collectCgroupMetrics(cgroupPath, containerName, serviceName) {
 
 async function collectLxcContainerMetrics() {
   const startTs = Date.now();
+  const cgroupRootDir = await opendir(cgroupRootPath).catch((error) => {
+    console.log('Cannot open cgroup root directory.', error);
+  });
   for await (const containerDirent of cgroupRootDir) {
     if (!containerDirent.isDirectory() || !containerDirent.name.startsWith(LXC_PAYLOAD_PREFIX)) {
       continue;
@@ -72,6 +75,7 @@ async function collectLxcContainerMetrics() {
       collectCgroupMetrics(servicePath, containerName, serviceName);
     }
   }
+  cgroupRootDir.close();
   const endTs = Date.now();
   const duration = (endTs - startTs) / 1000;
   metrics.nodeCollectorDuration.labels(collectorName).set(duration);
@@ -139,12 +143,6 @@ module.exports.lxc_monitoring = function (parent) {
     const fstypes = Object.fromEntries(mounts.split('\n').map((entry) => (entry.split(' '))).map(([_, mountpoint, fstype])=>([mountpoint, fstype])));
     if (fstypes[cgroupRootPath] !== 'cgroup2') {
       console.log(new Error('The configured cgroup-root is not a cgroup2 filesystem.'));
-      return;
-    }
-    cgroupRootDir = await opendir(cgroupRootPath).catch((error) => {
-      console.log('Cannot open cgroup root directory.', error);
-    });
-    if (cgroupRootDir.path !== cgroupRootPath) {
       return;
     }
     monitoring = meshserver.monitoring;
