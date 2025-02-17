@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.0.5] - 2025-02-17
+### Fixed
+- Re-open cgroup directory on each scrape.
+
 ## [0.0.4] - 2025-02-17
 ### Fixed
 - Configuration is upgrade-save.
