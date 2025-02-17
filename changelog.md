@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.4] - 2025-02-17
+### Fixed
+- Configuration is upgrade-save.
+- Do not crash on configuration errors.
+
 ## [0.0.3] - 2025-02-17
 ### Changed
 - Update README.md

@@ -1,7 +1,7 @@
 {
   "name": "LXC Container and Service Monitoring",
   "shortName": "lxc_monitoring",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Daniel Hammerschmidt",
   "description": "Export metrics for LXC containers and running services within them",
   "hasAdminPanel": false,
